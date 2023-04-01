@@ -1,23 +1,17 @@
-from urllib.request import urlopen as uo
+from urllib.request import urlopen
 
 MAIN = "https://raw.githubusercontent.com/GabbaTK/battle-of-the-py/main/main.py"
 CLIENT = "https://raw.githubusercontent.com/GabbaTK/battle-of-the-py/main/client.py"
 SERVER = "https://raw.githubusercontent.com/GabbaTK/battle-of-the-py/main/server.py"
 
-MAIN_DATA = uo(MAIN)
-MAIN_CODE = MAIN_DATA.read()
+with urlopen(MAIN) as response:
+    with open("main.py", "wb") as MAIN_FILE:
+        MAIN_FILE.write(response.read())
 
-with open("main.py", "w") as MAIN_FILE:
-    MAIN_FILE.write(MAIN_CODE)
+with urlopen(CLIENT) as response:
+    with open("client.py", "wb") as CLIENT_FILE:
+        CLIENT_FILE.write(response.read())
 
-CLIENT_DATA = uo(CLIENT)
-CLIENT_CODE = CLIENT_DATA.read()
-
-with open("client.py", "w") as CLIENT_FILE:
-    CLIENT_FILE.write(CLIENT_CODE)
-                    
-SERVER_DATA = uo(SERVER)
-SERVER_CODE = SERVER_DATA.read()
-
-with open("server.py", "w") as SERVER_FILE:
-    SERVER_FILE.write(SERVER_CODE)
+with urlopen(SERVER) as response:
+    with open("server.py", "wb") as SERVER_FILE:
+        SERVER_FILE.write(response.read())
