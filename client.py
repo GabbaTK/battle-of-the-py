@@ -319,14 +319,14 @@ def gameLoop():
         elif DATA.startswith("SHOOT_"):
             SQUARE = DATA.split("_")
             SQUARE = SQUARE[1].split("-")
-
+            
             if PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == " " or PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "#":
                 PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] = "#"
                 sendData("SHOOT_MISS")
                 system("cls")
                 print(LOGO_POSITION_BOARD)
                 printBoardPosition()
-            elif PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "+":
+            elif PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "+" or PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "X":
                 PLAYER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] = "X"
                 sendData("SHOOT_HIT")
                 system("cls")

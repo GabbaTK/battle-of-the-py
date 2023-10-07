@@ -112,6 +112,8 @@ PLAYER_POSITION_BOARD = [[" ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
                          [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
                          [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "]]
 LETTER_SET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+AIHit = False
+AIDelay = 0
 
 PORT = 8651
 IP = socket.gethostbyname(socket.gethostname())
@@ -225,15 +227,30 @@ def receivedDataToTable(DATA):
 
     return TABLE
 
-def getInput():
+def getInput(devMode):
+    global AIHit, AIDelay
+
+    if AIHit:
+        sleep(AIDelay)
+
+        return AI()
+
     INPUT_SQUARE = list(input("Where do you want to shoot? >>>"))
+
+    if devMode:
+        if INPUT_SQUARE[0] == "A" and INPUT_SQUARE[1] == "I":
+            AIHit = True
+            AIDelay = int(INPUT_SQUARE[3])
+
+            return getInput(devMode)
+
     SQUARE = [INPUT_SQUARE[0], int("".join(INPUT_SQUARE[1:len(INPUT_SQUARE)]))]
 
     if SQUARE[0] in LETTER_SET and SQUARE[1] > 0 and SQUARE[1] < 11:
         return SQUARE
     else:
         print("Invalid square!")
-        return getInput()
+        return getInput(devMode)
 
 def checkWin(BOARD):
     WON = True
@@ -246,7 +263,7 @@ def checkWin(BOARD):
     return WON
 
 def serverTurn(PLAYER, DEV_MODE, HIT = False):
-    system("cls")
+    #system("cls")
 
     sendData(PLAYER, "TABLE_POSITION_GET")
     DATA = receiveData(PLAYER)
@@ -261,7 +278,7 @@ def serverTurn(PLAYER, DEV_MODE, HIT = False):
         system("cls")
         print(LOGO_WIN)
         return "END"
-
+    
     print(LOGO_HIT_BOARD)
     printBoardHit()
     print(LOGO_POSITION_BOARD)
@@ -270,10 +287,10 @@ def serverTurn(PLAYER, DEV_MODE, HIT = False):
     if HIT:
         print(f"\033[31m{LOGO_HIT_SHIP}\033[37m")
 
-    SQUARE = getInput()
+    SQUARE = getInput(DEV_MODE)
     SQUARE[0] = str(LETTER_SET.index(SQUARE[0]))
     SQUARE[1] = str(SQUARE[1] - 1)
-
+    
     sendData(PLAYER, "SHOOT_" + "-".join(SQUARE))
 
     DATA = receiveData(PLAYER)
@@ -381,7 +398,7 @@ def gameLoop(PLAYER, DEV_MODE):
                         system("cls")
                         print(LOGO_POSITION_BOARD)
                         printBoardPosition(SERVER_POSITION_BOARD)
-                    elif SERVER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "+":
+                    elif SERVER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "+" or SERVER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] == "X":
                         SERVER_POSITION_BOARD[int(SQUARE[0])][int(SQUARE[1])] = "X"
 
                         sendData(PLAYER, "SHOOT_HIT")
@@ -399,3 +416,78 @@ def gameLoop(PLAYER, DEV_MODE):
                             sendData(PLAYER, "GAME_CONTINUE")
 
             TURN = "S"
+
+def AI():
+    # Hit near detector
+    
+
+    # Probability calculator
+    probabilityBoard = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
+    # 4 Horizontal
+    for y in range(10):
+        for x in range(7):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y][x + 1] == " " and SERVER_HIT_BOARD[y][x + 2] == " " and SERVER_HIT_BOARD[y][x + 3] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y][x + 1] += 1
+                probabilityBoard[y][x + 2] += 1
+                probabilityBoard[y][x + 3] += 1
+
+    # 4 Vertical
+    for y in range(7):
+        for x in range(10):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y + 1][x] == " " and SERVER_HIT_BOARD[y + 2][x] == " " and SERVER_HIT_BOARD[y + 3][x] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y + 1][x] += 1
+                probabilityBoard[y + 2][x] += 1
+                probabilityBoard[y + 3][x] += 1
+
+
+    # 3 Horizontal
+    for y in range(10):
+        for x in range(8):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y][x + 1] == " " and SERVER_HIT_BOARD[y][x + 2] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y][x + 1] += 1
+                probabilityBoard[y][x + 2] += 1
+
+    # 3 Vertical
+    for y in range(8):
+        for x in range(10):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y + 1][x] == " " and SERVER_HIT_BOARD[y + 2][x] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y + 1][x] += 1
+                probabilityBoard[y + 2][x] += 1
+
+
+    # 2 Horizontal
+    for y in range(10):
+        for x in range(9):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y][x + 1] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y][x + 1] += 1
+
+    # 2 Vertical
+    for y in range(9):
+        for x in range(10):
+            if SERVER_HIT_BOARD[y][x] == " " and SERVER_HIT_BOARD[y + 1][x] == " ":
+                probabilityBoard[y][x] += 1
+                probabilityBoard[y + 1][x] += 1
+
+
+    biggest = [0, 1, 1]
+    for y in range(len(probabilityBoard)):
+        for x, cell in enumerate(probabilityBoard[y]):
+            if cell > biggest[0] and SERVER_HIT_BOARD[y][x] == " ":
+                biggest = [cell, y, x + 1]
+
+    return [LETTER_SET[biggest[1]], biggest[2]]
